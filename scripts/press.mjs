@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Draws every day since the first contribution as one line, wound clockwise
 // from the centre: one turn per calendar year (12 o'clock = 1 January), line
-// weight = that day's contributions. Writes record-dark.svg and record-light.svg.
+// weight = that day's contributions. Writes themed record and annual archive SVGs.
 //
 //   GITHUB_TOKEN=… node scripts/press.mjs --out dist
 //   node scripts/press.mjs --data record.json --today 2026-10-17 --out dist
@@ -11,6 +11,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
+import { renderArchive } from './archive.mjs';
+import { renderCalendarGuides } from './calendar.mjs';
 
 const { values: opt } = parseArgs({
   options: {
@@ -146,6 +148,7 @@ const facts = {
 await mkdir(opt.out, { recursive: true });
 for (const [name, theme] of Object.entries(THEMES)) {
   await writeFile(join(opt.out, `record-${name}.svg`), plate(theme));
+  await writeFile(join(opt.out, `archive-${name}.svg`), renderArchive(line, facts.today, theme));
 }
 console.log(
   `pressed ${line.length} days (${facts.since} → ${facts.today}), ${facts.total} contributions,`,
@@ -199,6 +202,7 @@ ${label(INSET, H - INSET, 'Weight = contributions that day')}
 ${label(W - INSET, H - INSET, [facts.total + ' contributions', facts.private].filter(Boolean).join(', '), '', 'end')}
 <circle class="ring" cx="${f(hx)}" cy="${f(hy)}" r="${HEAD}" fill="none" stroke="${c.signal}" stroke-width="1" vector-effect="non-scaling-stroke"/>
 <g class="head" transform="translate(${f(hx)} ${f(hy)})"><circle r="${HEAD}" fill="${c.signal}"/></g>
+${renderCalendarGuides(facts.today, c)}
 </svg>
 `;
 }
