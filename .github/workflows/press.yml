@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [scripts/press.mjs, .github/workflows/press.yml]
+    paths: ['scripts/**', .github/workflows/press.yml]
 
 permissions:
   contents: write
@@ -24,7 +24,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Draw the record
+      - name: Check generators
+        run: node --test scripts/*.test.mjs
+
+      - name: Draw the record and archive
         run: node scripts/press.mjs --out dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
